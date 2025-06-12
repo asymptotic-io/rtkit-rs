@@ -1,0 +1,14 @@
+[package]
+name = "zbus_rtkit"
+version = "0.1.0"
+edition = "2024"
+
+description = "RTKit binding"
+repository = "https://github.com/asymptotic-io/zbus_rtkit"
+keywords = ["D-Bus", "DBus", "RTKit"]
+license = "MIT"
+categories = ["os::unix-apis"]
+
+[dependencies]
+zbus = "5.7"
+anyhow = "1"
