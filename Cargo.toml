@@ -12,3 +12,4 @@ categories = ["os::unix-apis"]
 [dependencies]
 zbus = "5.7"
 anyhow = "1"
+libc = "0.2.172"
