@@ -258,4 +258,49 @@ mod tests {
         let attr = get_sched_attr().unwrap();
         assert_eq!(attr.sched_nice, -10);
     }
+
+    #[test]
+    fn test_make_thread_realtime() {
+        let rtkit = RTKit::new().unwrap();
+        let rttime_max = rtkit.rttime_usec_max().unwrap() as u64;
+
+        let rlim = libc::rlimit {
+            rlim_cur: rttime_max,
+            rlim_max: rttime_max,
+        };
+
+        let ret = unsafe { libc::setrlimit(libc::RLIMIT_RTTIME, &rlim) };
+        assert_eq!(ret, 0);
+
+        let thread_id = RTKit::current_thread_id();
+        assert!(rtkit.make_thread_realtime(thread_id, 10).is_ok());
+
+        let attr = get_sched_attr().unwrap();
+        assert!(attr.sched_policy > libc::SCHED_OTHER as u32);
+        assert_eq!(attr.sched_priority, 10);
+    }
+
+    #[test]
+    fn test_make_thread_realtime_with_pid() {
+        let rtkit = RTKit::new().unwrap();
+        let rttime_max = rtkit.rttime_usec_max().unwrap() as u64;
+
+        let rlim = libc::rlimit {
+            rlim_cur: rttime_max,
+            rlim_max: rttime_max,
+        };
+
+        let ret = unsafe { libc::setrlimit(libc::RLIMIT_RTTIME, &rlim) };
+        assert_eq!(ret, 0);
+
+        let process_id = RTKit::current_process_id();
+        let thread_id = RTKit::current_thread_id();
+        assert!(rtkit
+            .make_thread_realtime_with_pid(process_id, thread_id, 10)
+            .is_ok());
+
+        let attr = get_sched_attr().unwrap();
+        assert!(attr.sched_policy > libc::SCHED_OTHER as u32);
+        assert_eq!(attr.sched_priority, 10);
+    }
 }
