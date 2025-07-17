@@ -2,6 +2,9 @@
 // SPDX-FileCopyrightText: Copyright (c) 2025 Asymptotic Inc.
 // SPDX-FileCopyrightText: Copyright (c) 2025 Sanchayan Maity
 
+#![warn(missing_docs)]
+#![doc = include_str!("../README.md")]
+
 use zbus::blocking::Connection;
 use zbus::zvariant::Value;
 use zbus::Result;
@@ -24,11 +27,17 @@ fn is_rtkit_available(connection: &Connection) -> Result<bool> {
     Ok(names.contains(&"org.freedesktop.RealtimeKit1".to_string()))
 }
 
+/// The top-level structure providing access to the crate's functionality.
 pub struct RTKit {
     connection: Connection,
 }
 
 impl RTKit {
+    /// Create an instance of the `RTKit` structure. This makes a connection to the system D-Bus
+    /// daemon, and ensures that the `rtkit` daemon is available.
+    ///
+    /// Returns an `RTKit` structure if the connection succeeds and the daemon is available, or an
+    /// error otherwise.
     pub fn new() -> anyhow::Result<RTKit> {
         let connection = Connection::system()?;
 
@@ -37,6 +46,7 @@ impl RTKit {
         Ok(RTKit { connection })
     }
 
+    /// Returns the maximum permitted real-time priority value.
     pub fn max_realtime_priority(&self) -> anyhow::Result<i32> {
         match self.connection.call_method(
             Some(RTKIT_SERVICE_NAME),
@@ -57,6 +67,7 @@ impl RTKit {
         }
     }
 
+    /// Returns the minimum permitted nice level value.
     pub fn min_nice_level(&self) -> anyhow::Result<i32> {
         match self.connection.call_method(
             Some(RTKIT_SERVICE_NAME),
@@ -77,6 +88,12 @@ impl RTKit {
         }
     }
 
+    /// Returns the maximum time (in microseconds) that may be set for `RLIMIT_RTTIME`. This is the
+    /// maximum time a real-time thread may continuously occupy the CPU before being blocked by a
+    /// system call.
+    ///
+    /// Applications _must_ set an `RTLIMIT_RTTIME` before attempting to request real-time
+    /// priority.
     pub fn rttime_usec_max(&self) -> anyhow::Result<i64> {
         match self.connection.call_method(
             Some(RTKIT_SERVICE_NAME),
@@ -97,6 +114,8 @@ impl RTKit {
         }
     }
 
+    /// Requests a nice level of `priority` for the specified thread id (this is a non-real-time
+    /// scheduling level).
     pub fn make_thread_high_priority(&self, thread_id: u64, priority: i32) -> anyhow::Result<()> {
         self.connection.call_method(
             Some(RTKIT_SERVICE_NAME),
@@ -109,6 +128,8 @@ impl RTKit {
         Ok(())
     }
 
+    /// Requests a nice level of `priority` for the specified thread id of a specified process id
+    /// (this is a non-real-time scheduling level).
     pub fn make_thread_high_priority_with_pid(
         &self,
         process_id: u64,
@@ -126,6 +147,7 @@ impl RTKit {
         Ok(())
     }
 
+    /// Requests a real-time priority of `priority` for the specified thread id.
     pub fn make_thread_realtime(&self, thread_id: u64, priority: u32) -> anyhow::Result<()> {
         self.connection.call_method(
             Some(RTKIT_SERVICE_NAME),
@@ -138,6 +160,8 @@ impl RTKit {
         Ok(())
     }
 
+    /// Requests a real-time priority of `priority` for the specified thread id of a specified
+    /// process id.
     pub fn make_thread_realtime_with_pid(
         &self,
         process_id: u64,
@@ -155,10 +179,12 @@ impl RTKit {
         Ok(())
     }
 
+    /// A convenience method to return the calling thread's thread id.
     pub fn current_thread_id() -> u64 {
         unsafe { libc::syscall(libc::SYS_gettid) as u64 }
     }
 
+    /// A convenience method to return the current process id.
     pub fn current_process_id() -> u64 {
         std::process::id() as u64
     }
