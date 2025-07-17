@@ -190,9 +190,7 @@ mod tests {
 
     #[test]
     fn test_property() {
-        let rtkit = RTKit::new();
-        assert!(rtkit.is_ok());
-        let rtkit = rtkit.unwrap();
+        let rtkit = RTKit::new().unwrap();
 
         // Test for default values
         assert_eq!(rtkit.max_realtime_priority().unwrap(), 20);
@@ -212,9 +210,7 @@ mod tests {
 
     #[test]
     fn test_make_thread_high_priority() {
-        let rtkit = RTKit::new();
-        assert!(rtkit.is_ok());
-        let rtkit = rtkit.unwrap();
+        let rtkit = RTKit::new().unwrap();
 
         let thread_id = RTKit::current_thread_id();
         assert!(rtkit.make_thread_high_priority(thread_id, -10).is_ok());
@@ -225,15 +221,13 @@ mod tests {
 
     #[test]
     fn test_make_thread_high_priority_with_pid() {
-        let rtkit = RTKit::new();
-        assert!(rtkit.is_ok());
-        let rtkit = rtkit.unwrap();
+        let rtkit = RTKit::new().unwrap();
 
         let pid = RTKit::current_process_id();
         let thread_id = RTKit::current_thread_id();
-        assert!(rtkit
+        rtkit
             .make_thread_high_priority_with_pid(pid, thread_id, -10)
-            .is_ok());
+            .unwrap();
 
         let attr = get_sched_attr().unwrap();
         assert_eq!(attr.sched_nice, -10);
