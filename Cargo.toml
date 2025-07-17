@@ -3,8 +3,8 @@ name = "rtkit-rs"
 version = "0.1.0"
 edition = "2024"
 
-description = "RTKit binding"
-repository = "https://github.com/asymptotic-io/zbus_rtkit"
+description = "Rust bindings for the RealtimeKit D-Bus interface"
+repository = "https://github.com/asymptotic-io/rtkit-rs"
 keywords = ["D-Bus", "DBus", "RTKit"]
 license = "MIT"
 categories = ["os::unix-apis"]
