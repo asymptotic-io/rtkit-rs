@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: Copyright (c) 2025 Asymptotic Inc.
 // SPDX-FileCopyrightText: Copyright (c) 2025 Sanchayan Maity
 
-use zbus::Result;
 use zbus::blocking::Connection;
 use zbus::zvariant::Value;
+use zbus::Result;
 
 const RTKIT_OBJECT_PATH: &str = "/org/freedesktop/RealtimeKit1";
 const RTKIT_SERVICE_NAME: &str = "org.freedesktop.RealtimeKit1";
@@ -168,6 +168,26 @@ impl RTKit {
 mod tests {
     use super::*;
 
+    fn get_sched_attr() -> anyhow::Result<libc::sched_attr> {
+        unsafe {
+            let mut attr: libc::sched_attr = std::mem::MaybeUninit::zeroed().assume_init();
+
+            let ret = libc::syscall(
+                libc::SYS_sched_getattr,
+                0,
+                &mut attr as *mut libc::sched_attr,
+                std::mem::size_of::<libc::sched_attr>(),
+                0,
+            );
+
+            if ret < 0 {
+                Err(std::io::Error::last_os_error().into())
+            } else {
+                Ok(attr)
+            }
+        }
+    }
+
     #[test]
     fn test_property() {
         let rtkit = RTKit::new();
@@ -198,6 +218,9 @@ mod tests {
 
         let thread_id = RTKit::current_thread_id();
         assert!(rtkit.make_thread_high_priority(thread_id, -10).is_ok());
+
+        let attr = get_sched_attr().unwrap();
+        assert_eq!(attr.sched_nice, -10);
     }
 
     #[test]
@@ -208,10 +231,11 @@ mod tests {
 
         let pid = RTKit::current_process_id();
         let thread_id = RTKit::current_thread_id();
-        assert!(
-            rtkit
-                .make_thread_high_priority_with_pid(pid, thread_id, -10)
-                .is_ok()
-        )
+        assert!(rtkit
+            .make_thread_high_priority_with_pid(pid, thread_id, -10)
+            .is_ok());
+
+        let attr = get_sched_attr().unwrap();
+        assert_eq!(attr.sched_nice, -10);
     }
 }
